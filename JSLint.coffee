@@ -8,6 +8,8 @@ ctx.console = console
 vm.runInContext fs.readFileSync(__dirname + "/jslint.js"), ctx
 JSLINT = ctx.JSLINT
 
+VERBOSE = false
+
 try
   if process.argv.length < 3
     throw new Error "No file specified"
@@ -224,10 +226,11 @@ walk = (ast) ->
         ]
     else
       console.error "Unknown type: '#{type}'"
-      console.log util.inspect ast, false, null, true
+      console.error util.inspect ast, false, null, true
   return ast
 ast = parser.parse script
-console.log util.inspect ast, false, null, true
+if VERBOSE
+  console.log util.inspect ast, false, null, true
 walk ast, 0
 ast = uglify.ast_mangle ast, {
   mangle: true
@@ -236,7 +239,8 @@ ast = uglify.ast_mangle ast, {
 }
 #ast = uglify.ast_squeeze ast
 script = uglify.gen_code ast, beautify: true, indent_start:4, indent_level:2, quote_keys: true
-console.log script
+if VERBOSE
+  console.log script
 
 script = script.replace /(\n|^)\/\/.*(\n|$)/g, "$2"
 num2alphabet = (num) ->
@@ -262,9 +266,9 @@ ok = JSLINT script, {
 unless ok
   console.error "FAIL"
   result = JSLINT.data()
-  console.log util.inspect result, false, 3, true
+  console.error util.inspect result, false, 3, true
 else
   script = script.substr(head.length, script.length - (head.length+foot.length))
   script = "new ADSAFE_APP(#{id}, \"#{adsafeId}\", #{JSON.stringify(details)}, function(ADSAFE){\n#{script}\n});"
   fs.writeFileSync "#{filename}.adsafe.js", script
-  console.log script
+  process.exit 0
