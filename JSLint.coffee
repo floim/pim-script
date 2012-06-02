@@ -10,7 +10,8 @@ JSLINT = ctx.JSLINT
 try
   if process.argv.length < 3
     throw new Error "No file specified"
-  script = fs.readFileSync process.argv[2], 'utf8'
+  filename = process.argv[2]
+  script = fs.readFileSync filename, 'utf8'
 catch e
   console.log "File could not be read"
   process.exit 1
@@ -27,11 +28,15 @@ unless details?
   console.error "There are no details!"
   process.exit 1
 
-globals = ['document','twttr']
-if details.access? and Array.isArray details.access
-  for a in details.access
-    if typeof a is 'string' and a.match /^[a-zA-Z]+$/
-      globals.push a
+details.id = 2
+details.revision = 1
+
+# Alias dependencies.
+accessList = details.access ? []
+accessList.unshift "app"
+accessList.unshift "plugin"
+for access in accessList
+  script = "  var #{access} = lib.#{access}();\n#{script}"
 
 walk = (ast) ->
   if Array.isArray(ast) and ast.length > 0
@@ -55,16 +60,6 @@ walk = (ast) ->
     else if type is 'unary-prefix'
       ast[2] = walk ast[2]
     else if type is 'name'
-      if globals.indexOf(ast[1]) isnt -1
-        ast = [
-          'call'
-          [
-            'dot'
-            ['name','lib']
-            'global'
-          ]
-          [['string',ast[1]]]
-        ]
       #skip
     else if type is 'sub'
       ast[1] = walk ast[1]
@@ -123,10 +118,6 @@ walk = (ast) ->
             ]
           ]
         ast[2][1].unshift [
-          'stat'
-          ast[1]
-        ]
-        ast[2][1].push [
           'if'
           [
             'unary-prefix'
@@ -143,6 +134,10 @@ walk = (ast) ->
             ]
           ]
           undefined
+        ]
+        ast[2][1].unshift [
+          'stat'
+          ast[1]
         ]
         ast = [
           'for'
@@ -216,14 +211,27 @@ ast = uglify.ast_mangle ast, {
   defines: {'this':['name', "null"]}
 }
 #ast = uglify.ast_squeeze ast
-script = uglify.gen_code ast, beautify: true, indent_start:8, indent_level:2, quote_keys: true
+script = uglify.gen_code ast, beautify: true, indent_start:4, indent_level:2, quote_keys: true
 console.log script
 
 script = script.replace /(\n|^)\/\/.*(\n|$)/g, "$2"
-adsafeId = "APPAAAAFF_"
-script = "<div id=\"#{adsafeId}\">\n  <script>\n      ADSAFE.go(\"#{adsafeId}\", function (dom, lib) {\n        \"use strict\";\n#{script}}\n      );\n  </script>\n</div>"
+num2alphabet = (num) ->
+  chars = "ABCDEFGHIJ".split("")
+  num = parseInt num
+  if isNaN(num) or !isFinite(num)
+    throw new Error "Invalid number"
+  num = ""+num
+  out = ""
+  for i in [0...num.length]
+    out += chars[parseInt num.charAt(i)]
+  return out
+id = details.id
+adsafeId = "ZZZ#{num2alphabet id}_"
+head = "<div id=\"#{adsafeId}\"><script>\n"
+foot = "</script>\n</div>"
+script = "#{head}  ADSAFE.go(\"#{adsafeId}\", function (dom, lib) {\n    \"use strict\";\n#{script}\n  });#{foot}"
 ok = JSLINT script, {
-  adsafe: true, fragment: true, predef: globals, browser: true, safe: true, bitwise: true, continue: true, eqeq: true, es5: true, evil: false, forin: true, newcap: true, nomen: true, plusplus: true, regexp: true, undef: true, unparam: true, sloppy: true, stupid: true, sub: true, vars: true, white: true, css: true
+  adsafe: true, fragment: true, predef: [], browser: true, safe: true, bitwise: true, continue: true, eqeq: true, es5: true, evil: false, forin: true, newcap: true, nomen: true, plusplus: true, regexp: true, undef: true, unparam: true, sloppy: true, stupid: true, sub: true, vars: true, white: true, css: true
 }, {
   plugin: false
 }
@@ -232,6 +240,7 @@ unless ok
   result = JSLINT.data()
   console.log util.inspect result, false, 3, true
 else
-  script = script.replace "<script>","<script>\n    (function(){\n      var ADSAFE = new ADSAFE_APP(\"#{adsafeId}\",#{JSON.stringify(details)});"
-  script = script.replace "</script>","  }());\n  </script>"
+  script = script.substr(head.length, script.length - (head.length+foot.length))
+  script = "new ADSAFE_APP(#{id}, \"#{adsafeId}\", #{JSON.stringify(details)}, function(ADSAFE){\n#{script}\n});"
+  fs.writeFileSync "#{filename}.adsafe.js", script
   console.log script
