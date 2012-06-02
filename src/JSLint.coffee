@@ -5,7 +5,7 @@ parser = require("uglify-js").parser
 uglify = require("uglify-js").uglify
 ctx = vm.createContext()
 ctx.console = console
-vm.runInContext fs.readFileSync(__dirname + "/jslint.js"), ctx
+vm.runInContext fs.readFileSync(__dirname + "/../JSLint/jslint.js"), ctx
 JSLINT = ctx.JSLINT
 
 VERBOSE = false
