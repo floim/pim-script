@@ -27,6 +27,11 @@ catch e
   console.error JSON.stringify {errors:[{id:"INVALIDJSON"}]}
   process.exit 1
 
+if process.argv.length > 4
+  outputFilename = process.argv[4]
+else
+  outputFilename = "#{filename}.adsafe.js"
+
 details = null
 re = /\/\*\![A-Z_]+([\s\S]+)\*\//
 script = script.replace re, (header) ->
@@ -294,5 +299,5 @@ unless ok
 else
   script = script.substr(head.length, script.length - (head.length+foot.length))
   script = "new ADSAFE_APP(#{id}, \"#{adsafeId}\", #{JSON.stringify(details)}, function(ADSAFE){\n#{script}\n});"
-  fs.writeFileSync "#{filename}.adsafe.js", script
+  fs.writeFileSync outputFilename, script
   process.exit 0
