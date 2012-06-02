@@ -10,18 +10,25 @@ JSLINT = ctx.JSLINT
 
 VERBOSE = false
 
+if process.argv.length < 4
+  console.error JSON.stringify {errors:[{id:"NOARGS"}]}
+  process.exit 1
+
 try
-  if process.argv.length < 3
-    console.error JSON.stringify {errors:[{id:"INVALID"}]}
-    process.exit 1
   filename = process.argv[2]
   script = fs.readFileSync filename, 'utf8'
 catch e
   console.error JSON.stringify {errors:[{id:"NOTFOUND"}]}
   process.exit 1
 
+try
+  overrideDetails = JSON.parse process.argv[3]
+catch e
+  console.error JSON.stringify {errors:[{id:"INVALIDJSON"}]}
+  process.exit 1
+
 details = null
-re = /\/\*\!(?:FLO|P)IM_PLUGIN([\s\S]+)\*\//
+re = /\/\*\![A-Z_]+([\s\S]+)\*\//
 script = script.replace re, (header) ->
   matches = header.match re
   if matches
@@ -32,13 +39,16 @@ unless details?
   console.error JSON.stringify {errors:[{id:"NOHEADER"}]}
   process.exit 1
 
-details.id = 2
-details.revision = 1
+for k,v of overrideDetails
+  details[k] = v
+
+id = parseInt details.id
+if isNaN(id) or !isFinite(id)
+  console.error JSON.stringify {errors:[{id:"IDNAN"}]}
+  process.exit 1
 
 # Alias dependencies.
 accessList = details.access ? []
-accessList.unshift "app"
-accessList.unshift "plugin"
 for access in accessList
   script = "  var #{access} = lib.#{access}();\n#{script}"
 
@@ -117,7 +127,6 @@ walk = (ast) ->
       ast[2] = walk ast[2]
       ast[3] = walk ast[3]
     else if type is 'while'
-      #skip
       ast[2] = walk ast[2]
       if ast[1][0] is 'assign'
         # Rewrite this as a for loop
@@ -230,6 +239,7 @@ walk = (ast) ->
         console.error "Unknown type: '#{type}'"
         console.error util.inspect ast, false, null, true
   return ast
+
 ast = parser.parse script
 if VERBOSE
   console.log util.inspect ast, false, null, true
@@ -244,7 +254,6 @@ script = uglify.gen_code ast, beautify: true, indent_start:4, indent_level:2, qu
 if VERBOSE
   console.log script
 
-script = script.replace /(\n|^)\/\/.*(\n|$)/g, "$2"
 num2alphabet = (num) ->
   chars = "ABCDEFGHIJ".split("")
   num = parseInt num
@@ -255,16 +264,18 @@ num2alphabet = (num) ->
   for i in [0...num.length]
     out += chars[parseInt num.charAt(i)]
   return out
-id = details.id
+
 adsafeId = "ZZZ#{num2alphabet id}_"
 head = "<div id=\"#{adsafeId}\"><script>\n"
 foot = "</script>\n</div>"
 script = "#{head}  ADSAFE.go(\"#{adsafeId}\", function (dom, lib) {\n    \"use strict\";\n#{script}\n  });#{foot}"
+
 ok = JSLINT script, {
   adsafe: true, fragment: true, browser: true, safe: true, bitwise: true, continue: true, eqeq: true, es5: true, evil: false, forin: true, newcap: true, nomen: true, plusplus: true, regexp: true, undef: true, unparam: true, sloppy: true, stupid: true, sub: true, vars: true, white: true, css: true
 }, {
   plugin: false
 }
+
 unless ok
   result = JSLINT.data()
   if VERBOSE
