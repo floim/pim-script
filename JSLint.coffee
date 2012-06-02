@@ -12,11 +12,12 @@ VERBOSE = false
 
 try
   if process.argv.length < 3
-    throw new Error "No file specified"
+    console.error JSON.stringify {errors:[{id:"INVALID"}]}
+    process.exit 1
   filename = process.argv[2]
   script = fs.readFileSync filename, 'utf8'
 catch e
-  console.log "File could not be read"
+  console.error JSON.stringify {errors:[{id:"NOTFOUND"}]}
   process.exit 1
 
 details = null
@@ -28,7 +29,7 @@ script = script.replace re, (header) ->
       details = JSON.parse matches[1]
   return ""
 unless details?
-  console.error "There are no details!"
+  console.error JSON.stringify {errors:[{id:"NOHEADER"}]}
   process.exit 1
 
 details.id = 2
@@ -225,8 +226,9 @@ walk = (ast) ->
           ]
         ]
     else
-      console.error "Unknown type: '#{type}'"
-      console.error util.inspect ast, false, null, true
+      if VERBOSE
+        console.error "Unknown type: '#{type}'"
+        console.error util.inspect ast, false, null, true
   return ast
 ast = parser.parse script
 if VERBOSE
@@ -264,9 +266,20 @@ ok = JSLINT script, {
   plugin: false
 }
 unless ok
-  console.error "FAIL"
   result = JSLINT.data()
-  console.error util.inspect result, false, 3, true
+  if VERBOSE
+    console.error util.inspect result, false, 3, true
+  else
+    out = {errors:[]}
+    for error in result.errors
+      out.errors.push
+        raw:error.raw
+        reason:error.reason
+        line:error.line
+        character:error.character
+        evidence:error.evidence
+    console.error JSON.stringify out
+  process.exit 1
 else
   script = script.substr(head.length, script.length - (head.length+foot.length))
   script = "new ADSAFE_APP(#{id}, \"#{adsafeId}\", #{JSON.stringify(details)}, function(ADSAFE){\n#{script}\n});"
