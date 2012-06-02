@@ -4,6 +4,7 @@ util = require 'util'
 parser = require("uglify-js").parser
 uglify = require("uglify-js").uglify
 ctx = vm.createContext()
+ctx.console = console
 vm.runInContext fs.readFileSync(__dirname + "/jslint.js"), ctx
 JSLINT = ctx.JSLINT
 
@@ -44,6 +45,10 @@ walk = (ast) ->
     if type is 'toplevel'
       for ast2, i in ast[1]
         ast[1][i] = walk ast2
+    else if type is 'continue'
+      #skip
+    else if type is 'break'
+      #skip
     else if type is 'var'
       #skip
     else if type is 'new'
@@ -199,6 +204,9 @@ walk = (ast) ->
           ['string', property]
         ]
       ]
+    else if type is 'object'
+      for ast2,i in ast[1]
+        ast[1][i][1] = walk ast[1][i][1]
     else if type is 'string'
       a = ast[1].indexOf("</")
       if a > -1
@@ -247,7 +255,7 @@ head = "<div id=\"#{adsafeId}\"><script>\n"
 foot = "</script>\n</div>"
 script = "#{head}  ADSAFE.go(\"#{adsafeId}\", function (dom, lib) {\n    \"use strict\";\n#{script}\n  });#{foot}"
 ok = JSLINT script, {
-  adsafe: true, fragment: true, predef: [], browser: true, safe: true, bitwise: true, continue: true, eqeq: true, es5: true, evil: false, forin: true, newcap: true, nomen: true, plusplus: true, regexp: true, undef: true, unparam: true, sloppy: true, stupid: true, sub: true, vars: true, white: true, css: true
+  adsafe: true, fragment: true, browser: true, safe: true, bitwise: true, continue: true, eqeq: true, es5: true, evil: false, forin: true, newcap: true, nomen: true, plusplus: true, regexp: true, undef: true, unparam: true, sloppy: true, stupid: true, sub: true, vars: true, white: true, css: true
 }, {
   plugin: false
 }
