@@ -7,7 +7,13 @@ ctx = vm.createContext()
 vm.runInContext fs.readFileSync(__dirname + "/jslint.js"), ctx
 JSLINT = ctx.JSLINT
 
-script = fs.readFileSync process.argv[2], 'utf8'
+try
+  if process.argv.length < 3
+    throw new Error "No file specified"
+  script = fs.readFileSync process.argv[2], 'utf8'
+catch e
+  console.log "File could not be read"
+  process.exit 1
 
 details = null
 re = /\/\*\!(?:FLO|P)IM_PLUGIN([\s\S]+)\*\//
@@ -18,8 +24,8 @@ script = script.replace re, (header) ->
       details = JSON.parse matches[1]
   return ""
 unless details?
+  console.error "There are no details!"
   process.exit 1
-console.log details
 
 globals = ['document','twttr']
 if details.access? and Array.isArray details.access
@@ -197,11 +203,9 @@ walk = (ast) ->
       ]
     else if type is 'string'
       ast[1] = ast[1].replace(/\<\//g,"<\\/")
-      console.log "STRING: #{ast[1]}"
     else
       console.error "Unknown type: '#{type}'"
       console.log util.inspect ast, false, null, true
-      process.exit 1
   return ast
 ast = parser.parse script
 console.log util.inspect ast, false, null, true
@@ -212,17 +216,22 @@ ast = uglify.ast_mangle ast, {
   defines: {'this':['name', "null"]}
 }
 #ast = uglify.ast_squeeze ast
-script = uglify.gen_code ast, beautify: true, indent_start:2, indent_level:2, quote_keys: true
+script = uglify.gen_code ast, beautify: true, indent_start:8, indent_level:2, quote_keys: true
 console.log script
 
 script = script.replace /(\n|^)\/\/.*(\n|$)/g, "$2"
 adsafeId = "APPAAAAFF_"
-script = "<div id=\"#{adsafeId}\"><script>ADSAFE.go(\"#{adsafeId}\", function (dom, lib) {\n\"use strict\";\n#{script}});</script></div>"
+script = "<div id=\"#{adsafeId}\">\n  <script>\n      ADSAFE.go(\"#{adsafeId}\", function (dom, lib) {\n        \"use strict\";\n#{script}}\n      );\n  </script>\n</div>"
 ok = JSLINT script, {
   adsafe: true, fragment: true, predef: globals, browser: true, safe: true, bitwise: true, continue: true, eqeq: true, es5: true, evil: false, forin: true, newcap: true, nomen: true, plusplus: true, regexp: true, undef: true, unparam: true, sloppy: true, stupid: true, sub: true, vars: true, white: true, css: true
 }, {
   plugin: false
 }
 unless ok
+  console.error "FAIL"
   result = JSLINT.data()
-  console.dir result
+  console.log util.inspect result, false, 3, true
+else
+  script = script.replace "<script>","<script>\n    (function(){\n      var ADSAFE = new ADSAFE_APP(\"#{adsafeId}\",#{JSON.stringify(details)});"
+  script = script.replace "</script>","  }());\n  </script>"
+  console.log script
