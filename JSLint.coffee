@@ -85,8 +85,11 @@ walk = (ast) ->
       ast[2] = walk ast[2]
       ast[3] = walk ast[3]
     else if type is 'call'
-      ast[1] = walk ast[1]
       funcName = ast[1]
+      if ast[1][0] is 'dot'
+        ast[1][1] = walk ast[1][1]
+      else
+        ast[1] = walk ast[1]
       params = ast[2]
       for ast2, i in ast[2]
         ast[2][i] = walk ast2
@@ -197,7 +200,20 @@ walk = (ast) ->
         ]
       ]
     else if type is 'string'
-      ast[1] = ast[1].replace(/\<\//g,"<\\/")
+      a = ast[1].indexOf("</")
+      if a > -1
+        ast = [
+          'binary'
+          '+'
+          [
+            'string'
+            ast[1].substr(0,a+1)
+          ]
+          walk [
+            'string'
+            ast[1].substr(a+1)
+          ]
+        ]
     else
       console.error "Unknown type: '#{type}'"
       console.log util.inspect ast, false, null, true
