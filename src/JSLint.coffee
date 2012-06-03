@@ -299,24 +299,30 @@ ok = JSLINT script, {
   plugin: false
 }
 
+out = {errors:[],warnings:[]}
 unless ok
   result = JSLINT.data()
   if VERBOSE
     console.error util.inspect result, false, 3, true
-  else
-    out = {errors:[]}
-    for error in result.errors
-      if error?
-        out.errors.push
-          raw:error.raw
-          reason:error.reason
-          line:error.line
-          character:error.character
-          evidence:error.evidence
-    console.error JSON.stringify out
-  process.exit 1
-else
-  script = script.substr(head.length, script.length - (head.length+foot.length))
-  script = "new ADSAFE_APP(#{id}, \"#{adsafeId}\", #{JSON.stringify(details)}, function(ADSAFE){\n#{script}\n});"
-  fs.writeFileSync outputFilename, script
-  process.exit 0
+  for error in result.errors
+    if error?
+      entry =
+        raw:error.raw
+        reason:error.reason
+        line:error.line
+        character:error.character
+        evidence:error.evidence
+      if entry.reason is "Confusing use of '!'."
+        out.warnings.push entry
+      else
+        out.errors.push entry
+    else
+      out.errors.push null
+  console.error JSON.stringify out
+  if out.errors.length > 0
+    process.exit 1
+
+script = script.substr(head.length, script.length - (head.length+foot.length))
+script = "new ADSAFE_APP(#{id}, \"#{adsafeId}\", #{JSON.stringify(details)}, function(ADSAFE){\n#{script}\n});"
+fs.writeFileSync outputFilename, script
+process.exit 0
