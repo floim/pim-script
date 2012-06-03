@@ -172,6 +172,24 @@ walk = (ast) ->
           ast[2]
         ]
     else if type is 'block'
+      unrollSeqs = (ast, seqs = []) ->
+        if ast[0] isnt 'seq'
+          throw "INVALID!!"
+        seqs.push ast[1]
+        if ast[2][0] is 'seq'
+          unrollSeqs ast[2], seqs
+        else
+          seqs.push ast[2]
+        return seqs
+
+      if ast[1].length
+        for i in [ast[1].length-1..0]
+          if ast[1][i][0] is 'stat' and ast[1][i][1][0] is 'seq'
+            seqs = unrollSeqs ast[1][i][1]
+            stats = []
+            for seq in seqs
+              stats.push ['stat',seq]
+            ast[1].splice(i,1,stats...)
       for ast2, i in ast[1]
         ast[1][i] = walk ast2
     else if type is 'function'
@@ -288,12 +306,13 @@ unless ok
   else
     out = {errors:[]}
     for error in result.errors
-      out.errors.push
-        raw:error.raw
-        reason:error.reason
-        line:error.line
-        character:error.character
-        evidence:error.evidence
+      if error?
+        out.errors.push
+          raw:error.raw
+          reason:error.reason
+          line:error.line
+          character:error.character
+          evidence:error.evidence
     console.error JSON.stringify out
   process.exit 1
 else
