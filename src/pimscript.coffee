@@ -36,7 +36,7 @@ else
   outputFilename = "#{filename}.adsafe.js"
 
 details = null
-re = /\/\*\![A-Z_]+([\s\S]+)\*\//
+re = /\/\*\![A-Z_]+([\s\S]+?)\*\//
 script = script.replace re, (header) ->
   matches = header.match re
   if matches
