@@ -14,20 +14,20 @@ if tty.isatty(process.stdout.fd)
   VERBOSE = true
 
 if process.argv.length < 4
-  console.error JSON.stringify {errors:[{id:"NOARGS"}]}
+  console.error JSON.stringify {errors:[{raw:"NOARGS"}]}
   process.exit 1
 
 try
   filename = process.argv[2]
   script = fs.readFileSync filename, 'utf8'
 catch e
-  console.error JSON.stringify {errors:[{id:"NOTFOUND"}]}
+  console.error JSON.stringify {errors:[{raw:"NOTFOUND"}]}
   process.exit 1
 
 try
   overrideDetails = JSON.parse process.argv[3]
 catch e
-  console.error JSON.stringify {errors:[{id:"INVALIDJSON"}]}
+  console.error JSON.stringify {errors:[{raw:"INVALIDJSON"}]}
   process.exit 1
 
 if process.argv.length > 4
@@ -47,7 +47,7 @@ script = script.replace re, (header) ->
       details = JSON.parse matches[1]
   return ""
 unless details?
-  console.error JSON.stringify {errors:[{id:"NOHEADER"}]}
+  console.error JSON.stringify {errors:[{raw:"NOHEADER"}]}
   process.exit 1
 lines2 = script.split("\n").length
 lineDiff = lines2 - lines
@@ -57,7 +57,7 @@ for k,v of overrideDetails
 
 id = parseInt details.id
 if isNaN(id) or !isFinite(id)
-  console.error JSON.stringify {errors:[{id:"IDNAN"}]}
+  console.error JSON.stringify {errors:[{raw:"IDNAN"}]}
   process.exit 1
 
 # Alias dependencies.
@@ -275,7 +275,7 @@ walk = (ast) ->
 try
   ast = parser.parse script
 catch e
-  console.error JSON.stringify {errors:[{id:"PARSEFAIL",message:e.message,line:e.line-lineDiff,col:e.col}]}
+  console.error JSON.stringify {errors:[{raw:"PARSEFAIL",reason:e.message,line:e.line-lineDiff,col:e.col}]}
   if VERBOSE
     console.log util.inspect e, false, null, true
   process.exit 1
@@ -327,7 +327,11 @@ unless ok
         line:error.line
         character:error.character
         evidence:error.evidence
-      if entry.reason is "Confusing use of '!'."
+      okayReasons = [
+        "Confusing use of '!'."
+        "Expected 'String' and instead saw ''''."
+      ]
+      if okayReasons.indexOf(entry.reason) isnt -1
         out.warnings.push entry
       else
         out.errors.push entry
