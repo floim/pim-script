@@ -35,6 +35,9 @@ if process.argv.length > 4
 else
   outputFilename = "#{filename}.adsafe.js"
 
+lineDiff = 0
+lines = script.split("\n").length
+
 details = null
 re = /\/\*\![A-Z_]+([\s\S]+?)\*\//
 script = script.replace re, (header) ->
@@ -46,6 +49,8 @@ script = script.replace re, (header) ->
 unless details?
   console.error JSON.stringify {errors:[{id:"NOHEADER"}]}
   process.exit 1
+lines2 = script.split("\n").length
+lineDiff = lines2 - lines
 
 for k,v of overrideDetails
   details[k] = v
@@ -58,6 +63,7 @@ if isNaN(id) or !isFinite(id)
 # Alias dependencies.
 accessList = details.access ? []
 for access in accessList
+  lineDiff++
   script = "  var #{access} = lib.#{access}();\n#{script}"
 
 walk = (ast) ->
@@ -266,7 +272,13 @@ walk = (ast) ->
         console.error util.inspect ast, false, null, true
   return ast
 
-ast = parser.parse script
+try
+  ast = parser.parse script
+catch e
+  console.error JSON.stringify {errors:[{id:"PARSEFAIL",message:e.message,line:e.line-lineDiff,col:e.col}]}
+  if VERBOSE
+    console.log util.inspect e, false, null, true
+  process.exit 1
 if VERBOSE
   console.log util.inspect ast, false, null, true
 walk ast, 0
