@@ -1,6 +1,7 @@
 fs = require 'fs'
 vm = require 'vm'
 util = require 'util'
+tty = require 'tty'
 parser = require("uglify-js").parser
 uglify = require("uglify-js").uglify
 ctx = vm.createContext()
@@ -9,6 +10,8 @@ vm.runInContext fs.readFileSync(__dirname + "/../JSLint/jslint.js"), ctx
 JSLINT = ctx.JSLINT
 
 VERBOSE = false
+if tty.isatty(process.stdout.fd)
+  VERBOSE = true
 
 if process.argv.length < 4
   console.error JSON.stringify {errors:[{id:"NOARGS"}]}
