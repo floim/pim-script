@@ -315,8 +315,11 @@ num2alphabet = (num) ->
   num = parseInt num
   if isNaN(num) or !isFinite(num)
     throw new Error "Invalid number"
-  num = ""+num
   out = ""
+  if num < 0
+    num = 0 - num
+    out += "X"
+  num = ""+num
   for i in [0...num.length]
     out += chars[parseInt num.charAt(i)]
   return out
