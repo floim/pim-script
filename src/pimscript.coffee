@@ -66,6 +66,8 @@ for access in accessList
   lineDiff++
   script = "  var #{access} = lib.#{access}();\n#{script}"
 
+script = "var console = lib.console();\n#{script}"
+
 walk = (ast) ->
   if Array.isArray(ast) and ast.length > 0
     type = ast[0]
