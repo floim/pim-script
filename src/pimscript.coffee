@@ -91,8 +91,15 @@ walk = (ast) ->
       #skip
     else if type is 'regexp'
       #skip
-    else if type is 'unary-prefix'
+    else if type is 'conditional'
+      ast[1] = walk ast[1]
       ast[2] = walk ast[2]
+      ast[3] = walk ast[3]
+    else if type is 'unary-prefix'
+      if ast[1] is 'void'
+        ast = ['name','null']
+      else
+        ast[2] = walk ast[2]
     else if type is 'name'
       #skip
     else if type is 'sub'
