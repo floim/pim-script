@@ -201,6 +201,14 @@ walk = (ast) ->
             for seq in seqs
               stats.push ['stat',seq]
             ast[1].splice(i,1,stats...)
+          if ast[1][i][0] is 'return' and ast[1][i][1][0] is 'assign'
+            variable = ast[1][i][1][2]
+            ast[1][i][0] = 'stat'
+            ast[1].splice i+1, 0,
+              [
+                'return'
+                variable
+              ]
       for ast2, i in ast[1]
         ast[1][i] = walk ast2
     else if type is 'function'
