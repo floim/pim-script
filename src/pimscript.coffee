@@ -292,6 +292,14 @@ catch e
 if VERBOSE
   console.log util.inspect ast, false, null, true
 walk ast, 0
+
+old = uglify.Scope::get_mangled
+uglify.Scope::get_mangled = (name, newMangle) ->
+  if /^[a-z]/i.test name
+    return name
+  else
+    return old.call(@, name, newMangle)
+
 ast = uglify.ast_mangle ast, {
   mangle: true
   toplevel: true
