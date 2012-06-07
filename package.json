@@ -5,7 +5,7 @@
   "homepage": "https://github.com/p-im/pim-script",
   "bugs": {"url": "https://github.com/p-im/pim-script/issues"},
   "author": "Benjie Gillam <benjie@jemjie.com> http://www.benjiegillam.com/",
-  "files": ["lib","bin"],
+  "files": ["lib","bin","JSLint"],
   "main": "lib/pimscript.js",
   "bin": "bin/pimscript",
   "repository": {"type": "git", "url": "git://github.com/p-im/pim-script.git"},
