@@ -149,6 +149,11 @@ walk = (ast) ->
       ast[1] = walk ast[1]
       ast[2] = walk ast[2]
       ast[3] = walk ast[3]
+    else if type is 'for'
+      ast[1] = walk ast[1]
+      ast[2] = walk ast[2]
+      ast[3] = walk ast[3]
+      ast[4] = walk ast[4]
     else if type is 'while'
       ast[2] = walk ast[2]
       if ast[1][0] is 'assign'
