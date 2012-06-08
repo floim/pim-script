@@ -129,6 +129,8 @@ walk = (ast) ->
       funcName = ast[1]
       if ast[1][0] is 'dot'
         ast[1][1] = walk ast[1][1]
+      else if ast[1][0] is 'sub'
+        ast[1][1] = walk ast[1][1]
       else
         ast[1] = walk ast[1]
       params = ast[2]
