@@ -9,7 +9,7 @@
   "main": "lib/pimscript.js",
   "bin": "bin/pimscript",
   "repository": {"type": "git", "url": "git://github.com/p-im/pim-script.git"},
-  "dependencies": {"uglify-js": "git://github.com/BenjieGillam/UglifyJS.git#v1.2.6-jslint"},
+  "dependencies": {"uglify-js": "git://github.com/BenjieGillam/UglifyJS.git#v1.2.6-jslint.1"},
   "devDependencies": {"coffee-script": ">=1.2.0"},
   "publish":false
 }
