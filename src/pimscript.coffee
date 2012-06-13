@@ -238,9 +238,8 @@ walk = (ast) ->
       for ast2, i in ast[1]
         ast[1][i] = walk ast2
     else if type is 'function'
-      #skip ('function', name, arguments, ast)
-      for ast2, i in ast[3]
-        ast[3][i] = walk ast2
+      tmp = walk ['block',ast[3]]
+      ast[3] = tmp[1]
     else if type is 'stat'
       ast[1] = walk ast[1]
     else if type is 'assign'
