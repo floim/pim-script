@@ -1,5 +1,5 @@
 { "name": "pimscript",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Converts JavaScript to be more likely to be compatible with ADsafe",
   "keywords": ["Pim","javascript","ADsafe","FBJS"],
   "homepage": "https://github.com/p-im/pim-script",
