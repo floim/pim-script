@@ -33,7 +33,7 @@ catch e
 if process.argv.length > 4
   outputFilename = process.argv[4]
 else
-  outputFilename = "#{filename}.adsafe.js"
+  outputFilename = filename.replace /(\.js|)$/,".ps"
 
 lineDiff = 0
 lines = script.split("\n").length
