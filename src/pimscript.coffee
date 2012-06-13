@@ -38,17 +38,29 @@ else
 lineDiff = 0
 lines = script.split("\n").length
 
+type = null
 details = null
-re = /\/\*\![A-Z_]+([\s\S]+?)\*\//
+description = null
+re = /\/\*\!([A-Z_]+)\s*(\{[\s\S]+?\})\s*(?:\n---+\n([\s\S]+?))?\*\//
 script = script.replace re, (header) ->
   matches = header.match re
   if matches
     try
-      details = JSON.parse matches[1]
+      type = matches[1]
+      details = JSON.parse matches[2]
+      description = matches[3]
+    catch e
+      console.log "JSON decode error: "+e.message
   return ""
 unless details?
   console.error JSON.stringify {errors:[{raw:"NOHEADER"}]}
   process.exit 1
+
+details.type = type
+if description?.length
+  details.description = description
+
+script = script.replace re, (description) ->
 lines2 = script.split("\n").length
 lineDiff = lines2 - lines
 
@@ -349,7 +361,7 @@ ok = JSLINT script, {
   plugin: false
 }
 
-out = {errors:[],warnings:[]}
+out = {errors:[],warnings:[],details:details}
 unless ok
   result = JSLINT.data()
   if VERBOSE
@@ -372,9 +384,9 @@ unless ok
         out.errors.push entry
     else
       out.errors.push null
-  console.error JSON.stringify out
-  if out.errors.length > 0
-    process.exit 1
+console.error JSON.stringify out
+if out.errors.length > 0
+  process.exit 1
 
 script = script.substr(head.length, script.length - (head.length+foot.length))
 script = "new ADSAFE_APP(#{id}, \"#{adsafeId}\", #{JSON.stringify(details)}, function(ADSAFE){\n#{script}\n});"
