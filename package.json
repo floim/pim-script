@@ -1,5 +1,5 @@
 { "name": "pimscript",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Converts JavaScript to be more likely to be compatible with ADsafe",
   "keywords": ["Pim","javascript","ADsafe","FBJS"],
   "homepage": "https://github.com/p-im/pim-script",
@@ -9,7 +9,7 @@
   "main": "lib/pimscript.js",
   "bin": "bin/pimscript",
   "repository": {"type": "git", "url": "git://github.com/p-im/pim-script.git"},
-  "dependencies": {"uglify-js": "git://github.com/BenjieGillam/UglifyJS.git#v1.2.6-jslint.1"},
+  "dependencies": {"uglify-js": "git://github.com/benjie/UglifyJS.git#v1.2.6-jslint.1"},
   "devDependencies": {"coffee-script": ">=1.2.0"},
   "publish":false
 }

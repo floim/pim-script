@@ -113,4 +113,4 @@ code.
 [JSLint]: http://www.jslint.com/
 [semver]: http://semver.org/
 [UglifyJS]: https://github.com/mishoo/UglifyJS
-[UglifyJS-Benjie]: https://github.com/benjiegillam/UglifyJS
+[UglifyJS-Benjie]: https://github.com/benjie/UglifyJS
